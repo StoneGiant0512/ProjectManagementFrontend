@@ -27,7 +27,7 @@ export default function RegisterPage() {
       if (response.success && response.data.token) {
         authStorage.setToken(response.data.token);
         // Redirect to dashboard
-        router.push('/');
+        router.push('/dashboard');
       }
     } catch (error: any) {
       setErrors({
