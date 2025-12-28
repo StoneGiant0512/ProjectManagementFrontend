@@ -3,6 +3,7 @@
 import { User } from '@/types/auth';
 import { authStorage } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/common';
 
 interface HeaderProps {
   user: User;
@@ -44,13 +45,15 @@ export default function Header({ user }: HeaderProps) {
                 {user.name.charAt(0).toUpperCase()}
               </span>
             </div>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleLogout}
-              className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors text-xs sm:text-sm"
+              className="text-xs sm:text-sm"
             >
               <span className="hidden sm:inline">Logout</span>
               <span className="sm:hidden">Out</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

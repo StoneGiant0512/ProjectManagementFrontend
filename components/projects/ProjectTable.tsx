@@ -1,6 +1,8 @@
 'use client';
 
 import { Project } from '@/types/project';
+import { Badge, Button } from '@/components/common';
+import ProjectCard from './ProjectCard';
 
 interface ProjectTableProps {
   projects: Project[];
@@ -36,22 +38,10 @@ export default function ProjectTable({
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      active: 'bg-green-100 text-green-800',
-      'on hold': 'bg-yellow-100 text-yellow-800',
-      completed: 'bg-gray-100 text-gray-800',
-    };
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800'
-        }`}
-      >
-        {status}
-      </span>
-    );
+  const getStatusVariant = (status: string): 'success' | 'warning' | 'default' => {
+    if (status === 'active') return 'success';
+    if (status === 'on hold') return 'warning';
+    return 'default';
   };
 
   const SortableHeader = ({
@@ -134,7 +124,9 @@ export default function ProjectTable({
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">{project.name}</div>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">{getStatusBadge(project.status)}</td>
+                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                  <Badge variant={getStatusVariant(project.status)}>{project.status}</Badge>
+                </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(project.deadline)}
                 </td>
@@ -146,18 +138,22 @@ export default function ProjectTable({
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onEdit(project)}
-                      className="px-3 py-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded transition-colors"
+                      className="text-blue-600 hover:text-blue-900 hover:bg-blue-50"
                     >
                       Edit
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onDelete(project.id)}
-                      className="px-3 py-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
+                      className="text-red-600 hover:text-red-900 hover:bg-red-50"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -169,43 +165,12 @@ export default function ProjectTable({
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {projects.map((project) => (
-          <div
+          <ProjectCard
             key={project.id}
-            className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <h3 className="text-base font-semibold text-gray-900 flex-1">{project.name}</h3>
-              {getStatusBadge(project.status)}
-            </div>
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Deadline:</span>
-                <span className="text-gray-900 font-medium">{formatDate(project.deadline)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Team Member:</span>
-                <span className="text-gray-900 font-medium">{project.assigned_team_member}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Budget:</span>
-                <span className="text-gray-900 font-medium">{formatCurrency(project.budget)}</span>
-              </div>
-            </div>
-            <div className="flex gap-2 pt-3 border-t border-gray-200">
-              <button
-                onClick={() => onEdit(project)}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(project.id)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors text-sm"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+            project={project}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </div>
     </>

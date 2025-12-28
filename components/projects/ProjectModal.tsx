@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Project, ProjectFormData } from '@/types/project';
+import { Input, Button } from '@/components/common';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -104,22 +105,16 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Project Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter project name"
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-            </div>
+            <Input
+              id="name"
+              label="Project Name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Enter project name"
+              error={errors.name}
+              required
+            />
 
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
@@ -139,87 +134,65 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
               </select>
             </div>
 
-            <div>
-              <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-1">
-                Deadline *
-              </label>
-              <input
-                type="date"
-                id="deadline"
-                value={formData.deadline}
-                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.deadline ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.deadline && <p className="text-red-500 text-xs mt-1">{errors.deadline}</p>}
-            </div>
+            <Input
+              id="deadline"
+              label="Deadline"
+              type="date"
+              value={formData.deadline}
+              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+              error={errors.deadline}
+              required
+            />
 
-            <div>
-              <label
-                htmlFor="assigned_team_member"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Assigned Team Member *
-              </label>
-              <input
-                type="text"
-                id="assigned_team_member"
-                value={formData.assigned_team_member}
-                onChange={(e) =>
-                  setFormData({ ...formData, assigned_team_member: e.target.value })
-                }
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.assigned_team_member ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter team member name"
-              />
-              {errors.assigned_team_member && (
-                <p className="text-red-500 text-xs mt-1">{errors.assigned_team_member}</p>
-              )}
-            </div>
+            <Input
+              id="assigned_team_member"
+              label="Assigned Team Member"
+              type="text"
+              value={formData.assigned_team_member}
+              onChange={(e) =>
+                setFormData({ ...formData, assigned_team_member: e.target.value })
+              }
+              placeholder="Enter team member name"
+              error={errors.assigned_team_member}
+              required
+            />
 
-            <div>
-              <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-1">
-                Budget *
-              </label>
-              <input
-                type="number"
-                id="budget"
-                value={formData.budget}
-                onChange={(e) =>
-                  setFormData({ ...formData, budget: parseFloat(e.target.value) || 0 })
-                }
-                min="0"
-                step="0.01"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.budget ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter budget amount"
-              />
-              {errors.budget && <p className="text-red-500 text-xs mt-1">{errors.budget}</p>}
-            </div>
+            <Input
+              id="budget"
+              label="Budget"
+              type="number"
+              value={formData.budget}
+              onChange={(e) =>
+                setFormData({ ...formData, budget: parseFloat(e.target.value) || 0 })
+              }
+              min="0"
+              step="0.01"
+              placeholder="Enter budget amount"
+              error={errors.budget}
+              required
+            />
 
             {errors.submit && (
               <p className="text-red-500 text-sm">{errors.submit}</p>
             )}
 
             <div className="flex justify-end gap-3 pt-4">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 disabled={isSubmitting}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="primary"
+                isLoading={isSubmitting}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Saving...' : project ? 'Update Project' : 'Create Project'}
-              </button>
+                {project ? 'Update Project' : 'Create Project'}
+              </Button>
             </div>
           </form>
         </div>

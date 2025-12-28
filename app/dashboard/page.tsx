@@ -6,12 +6,9 @@ import { Project, ProjectFormData } from '@/types/project';
 import { projectApi, authApi } from '@/lib/api';
 import { authStorage } from '@/lib/auth';
 import { User } from '@/types/auth';
-import ProjectTable from '@/components/ProjectTable';
-import ProjectModal from '@/components/ProjectModal';
-import StatusFilter from '@/components/StatusFilter';
-import SearchBar from '@/components/SearchBar';
-import Header from '@/components/Header';
-import Pagination from '@/components/Pagination';
+import { ProjectTable, ProjectModal, StatusFilter, SearchBar } from '@/components/projects';
+import { Header } from '@/components/layout';
+import { Pagination } from '@/components/shared';
 
 export default function Dashboard() {
   const router = useRouter();
