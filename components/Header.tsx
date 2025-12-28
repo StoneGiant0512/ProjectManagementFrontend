@@ -22,15 +22,15 @@ export default function Header({ user }: HeaderProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Title */}
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">Project Dashboard</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Project Dashboard</h1>
           </div>
 
           {/* User Info and Logout */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden sm:flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
+                <p className="text-xs text-gray-500 hidden lg:block">{user.email}</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
                 <span className="text-white font-medium text-sm">
@@ -38,11 +38,18 @@ export default function Header({ user }: HeaderProps) {
                 </span>
               </div>
             </div>
+            {/* Mobile: Show only avatar */}
+            <div className="sm:hidden h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+              <span className="text-white font-medium text-xs">
+                {user.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors text-sm"
+              className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors text-xs sm:text-sm"
             >
-              Logout
+              <span className="hidden sm:inline">Logout</span>
+              <span className="sm:hidden">Out</span>
             </button>
           </div>
         </div>

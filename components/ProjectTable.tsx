@@ -68,7 +68,7 @@ export default function ProjectTable({
     const isActive = sortField === field;
     return (
       <th
-        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+        className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
         onClick={() => onSort(field)}
       >
         <div className="flex items-center gap-2">
@@ -112,55 +112,103 @@ export default function ProjectTable({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-        <thead className="bg-gray-50">
-          <tr>
-            <SortableHeader field="name">Project Name</SortableHeader>
-            <SortableHeader field="status">Status</SortableHeader>
-            <SortableHeader field="deadline">Deadline</SortableHeader>
-            <SortableHeader field="assigned_team_member">Team Member</SortableHeader>
-            <SortableHeader field="budget">Budget</SortableHeader>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {projects.map((project) => (
-            <tr key={project.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{project.name}</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(project.status)}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatDate(project.deadline)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {project.assigned_team_member}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {formatCurrency(project.budget)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  onClick={() => onEdit(project)}
-                  className="text-blue-600 hover:text-blue-900 mr-4"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(project.id)}
-                  className="text-red-600 hover:text-red-900"
-                >
-                  Delete
-                </button>
-              </td>
+    <>
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
+            <tr>
+              <SortableHeader field="name">Project Name</SortableHeader>
+              <SortableHeader field="status">Status</SortableHeader>
+              <SortableHeader field="deadline">Deadline</SortableHeader>
+              <SortableHeader field="assigned_team_member">Team Member</SortableHeader>
+              <SortableHeader field="budget">Budget</SortableHeader>
+              <th className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {projects.map((project) => (
+              <tr key={project.id} className="hover:bg-gray-50">
+                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">{project.name}</div>
+                </td>
+                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">{getStatusBadge(project.status)}</td>
+                <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(project.deadline)}
+                </td>
+                <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {project.assigned_team_member}
+                </td>
+                <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {formatCurrency(project.budget)}
+                </td>
+                <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => onEdit(project)}
+                      className="px-3 py-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(project.id)}
+                      className="px-3 py-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {projects.map((project) => (
+          <div
+            key={project.id}
+            className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="text-base font-semibold text-gray-900 flex-1">{project.name}</h3>
+              {getStatusBadge(project.status)}
+            </div>
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Deadline:</span>
+                <span className="text-gray-900 font-medium">{formatDate(project.deadline)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Team Member:</span>
+                <span className="text-gray-900 font-medium">{project.assigned_team_member}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Budget:</span>
+                <span className="text-gray-900 font-medium">{formatCurrency(project.budget)}</span>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-3 border-t border-gray-200">
+              <button
+                onClick={() => onEdit(project)}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => onDelete(project.id)}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

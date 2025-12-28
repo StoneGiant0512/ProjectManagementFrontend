@@ -11,6 +11,7 @@ import ProjectModal from '@/components/ProjectModal';
 import StatusFilter from '@/components/StatusFilter';
 import SearchBar from '@/components/SearchBar';
 import Header from '@/components/Header';
+import Pagination from '@/components/Pagination';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function Dashboard() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [sortField, setSortField] = useState<keyof Project | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Check authentication on mount
   useEffect(() => {
@@ -103,11 +106,24 @@ export default function Dashboard() {
   useEffect(() => {
     const sorted = sortProjects(projects);
     setFilteredProjects(sorted);
+    // Reset to first page when filtered/sorted results change
+    setCurrentPage(1);
   }, [projects, sortProjects]);
 
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  // Calculate paginated projects
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
+
+  // Reset to first page when items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
 
   const handleAddProject = () => {
     setEditingProject(null);
@@ -179,9 +195,10 @@ export default function Dashboard() {
             </div>
             <button
               onClick={handleAddProject}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm hover:shadow-md"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm hover:shadow-md text-sm sm:text-base"
             >
-              + Add New Project
+              <span className="hidden sm:inline">+ Add New Project</span>
+              <span className="sm:hidden">+ Add Project</span>
             </button>
           </div>
 
@@ -200,9 +217,9 @@ export default function Dashboard() {
         )}
 
         {/* Projects Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <ProjectTable
-            projects={filteredProjects}
+            projects={paginatedProjects}
             onEdit={handleEditProject}
             onDelete={handleDeleteProject}
             isLoading={isLoading}
@@ -217,14 +234,19 @@ export default function Dashboard() {
               }
             }}
           />
-        </div>
 
-        {/* Project Count */}
-        {!isLoading && (
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
-          </div>
-        )}
+          {/* Pagination */}
+          {!isLoading && filteredProjects.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredProjects.length}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          )}
+        </div>
 
         {/* Modal */}
         <ProjectModal
