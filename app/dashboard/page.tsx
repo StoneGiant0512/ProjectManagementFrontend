@@ -13,6 +13,7 @@ import { Pagination } from '@/components/shared';
 export default function Dashboard() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>([]); // For accurate counts
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -51,7 +52,17 @@ export default function Dashboard() {
     checkAuth();
   }, [router]);
 
-  // Fetch projects from API
+  // Fetch all projects for accurate counts (without filters)
+  const fetchAllProjects = useCallback(async () => {
+    try {
+      const data = await projectApi.getAll();
+      setAllProjects(data);
+    } catch (err) {
+      console.error('Error fetching all projects:', err);
+    }
+  }, []);
+
+  // Fetch projects from API with filters
   const fetchProjects = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -107,9 +118,22 @@ export default function Dashboard() {
     setCurrentPage(1);
   }, [projects, sortProjects]);
 
+  // Fetch all projects on mount for counts
+  useEffect(() => {
+    fetchAllProjects();
+  }, [fetchAllProjects]);
+
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  // Calculate project counts by status from all projects (for accurate counts)
+  const projectCounts = {
+    all: allProjects.length,
+    active: allProjects.filter((p: Project) => p.status === 'active').length,
+    'on hold': allProjects.filter((p: Project) => p.status === 'on hold').length,
+    completed: allProjects.filter((p: Project) => p.status === 'completed').length,
+  };
 
   // Calculate paginated projects
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
@@ -139,6 +163,7 @@ export default function Dashboard() {
 
     try {
       await projectApi.delete(id);
+      fetchAllProjects(); // Refresh counts
       fetchProjects();
     } catch (err) {
       console.error('Error deleting project:', err);
@@ -155,6 +180,7 @@ export default function Dashboard() {
       }
       setIsModalOpen(false);
       setEditingProject(null);
+      fetchAllProjects(); // Refresh counts
       fetchProjects();
     } catch (err) {
       console.error('Error saving project:', err);
@@ -201,7 +227,11 @@ export default function Dashboard() {
 
           {/* Filters and Search */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <StatusFilter selectedStatus={selectedStatus} onStatusChange={setSelectedStatus} />
+            <StatusFilter
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+              projectCounts={projectCounts}
+            />
             <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
           </div>
         </div>
