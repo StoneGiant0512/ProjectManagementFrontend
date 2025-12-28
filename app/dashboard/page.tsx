@@ -24,6 +24,8 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [sortField, setSortField] = useState<keyof Project | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Check authentication on mount
   useEffect(() => {
@@ -64,6 +66,44 @@ export default function Dashboard() {
       setIsLoading(false);
     }
   }, [selectedStatus, searchTerm]);
+
+  // Sort projects
+  const sortProjects = useCallback((projects: Project[]): Project[] => {
+    if (!sortField) return projects;
+
+    return [...projects].sort((a, b) => {
+      let aValue: any = a[sortField];
+      let bValue: any = b[sortField];
+
+      // Handle different data types
+      if (sortField === 'deadline') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      } else if (sortField === 'budget') {
+        aValue = Number(aValue);
+        bValue = Number(bValue);
+      } else if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      // Handle null/undefined values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      // Compare values
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [sortField, sortDirection]);
+
+  // Apply sorting to filtered projects
+  useEffect(() => {
+    const sorted = sortProjects(projects);
+    setFilteredProjects(sorted);
+  }, [projects, sortProjects]);
 
   useEffect(() => {
     fetchProjects();
@@ -166,6 +206,16 @@ export default function Dashboard() {
             onEdit={handleEditProject}
             onDelete={handleDeleteProject}
             isLoading={isLoading}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={(field) => {
+              if (sortField === field) {
+                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+              } else {
+                setSortField(field);
+                setSortDirection('asc');
+              }
+            }}
           />
         </div>
 

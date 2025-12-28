@@ -56,7 +56,7 @@ frontend/
 npm install
 ```
 
-2. Create a `.env.local` file in the frontend directory (optional):
+2. Create a `.env` file in the frontend directory (optional):
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```

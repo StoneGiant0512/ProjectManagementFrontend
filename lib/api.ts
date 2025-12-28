@@ -3,7 +3,7 @@ import { Project, ProjectFormData, ApiResponse } from '@/types/project';
 import { AuthResponse, LoginFormData, RegisterFormData, User } from '@/types/auth';
 import { authStorage } from './auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
