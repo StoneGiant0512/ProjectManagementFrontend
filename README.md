@@ -9,9 +9,14 @@ Frontend application for the Mini SaaS Dashboard project management system, buil
 - **Tailwind CSS 4** - Utility-first CSS framework
 - **Axios** - HTTP client for API requests
 
+## Live Demo
+You can access the live frontend deployed on Render.com here:
+https://projectmanagementfrontend-1.onrender.com
+
 ## Features
 
 - ✅ **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
+- ✅ **Debouncing** - Delays the search API call by 500ms after the user stops typing in the search bar, reducing unnecessary API requests and improving performance.
 - ✅ **Project Table View** - Display all projects in a clean, organized table
 - ✅ **Status Filtering** - Filter projects by status (All, Active, On Hold, Completed)
 - ✅ **Search Functionality** - Search projects by name or assigned team member
