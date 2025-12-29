@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Project, ProjectFormData, ApiResponse } from '@/types/project';
+import { Project, ProjectFormData, ApiResponse, PaginationMeta, PaginatedApiResponse } from '@/types/project';
 import { AuthResponse, LoginFormData, RegisterFormData, User } from '@/types/auth';
 import { authStorage } from './auth';
 
@@ -68,14 +68,28 @@ export const authApi = {
 
 // Project API
 export const projectApi = {
-  // Get all projects with optional filters
-  getAll: async (status?: string, search?: string): Promise<Project[]> => {
-    const params: { status?: string; search?: string } = {};
+  // Get all projects with optional filters and pagination
+  getAll: async (
+    status?: string,
+    search?: string,
+    page?: number,
+    limit?: number,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc'
+  ): Promise<{ projects: Project[]; pagination: PaginationMeta }> => {
+    const params: any = {};
     if (status && status !== 'all') params.status = status;
     if (search) params.search = search;
+    if (page) params.page = page;
+    if (limit) params.limit = limit;
+    if (sortBy) params.sortBy = sortBy;
+    if (sortOrder) params.sortOrder = sortOrder.toUpperCase();
 
-    const response = await api.get<ApiResponse<Project[]>>('/projects', { params });
-    return response.data.data || [];
+    const response = await api.get<PaginatedApiResponse<Project[]>>('/projects', { params });
+    return {
+      projects: response.data.data || [],
+      pagination: response.data.pagination,
+    };
   },
 
   // Get single project by ID

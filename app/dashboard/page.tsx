@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Project, ProjectFormData } from '@/types/project';
+import { Project, ProjectFormData, PaginationMeta } from '@/types/project';
 import { projectApi, authApi } from '@/lib/api';
 import { authStorage } from '@/lib/auth';
 import { User } from '@/types/auth';
@@ -13,8 +13,20 @@ import { Pagination } from '@/components/shared';
 export default function Dashboard() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [allProjects, setAllProjects] = useState<Project[]>([]); // For accurate counts
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    limit: 10,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+  const [allProjectsCount, setAllProjectsCount] = useState<{ [key: string]: number }>({
+    all: 0,
+    active: 0,
+    'on hold': 0,
+    completed: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +37,7 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [sortField, setSortField] = useState<keyof Project | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -53,13 +65,25 @@ export default function Dashboard() {
     checkAuth();
   }, [router]);
 
-  // Fetch all projects for accurate counts (without filters)
-  const fetchAllProjects = useCallback(async () => {
+  // Fetch project counts for status filter badges
+  const fetchProjectCounts = useCallback(async () => {
     try {
-      const data = await projectApi.getAll();
-      setAllProjects(data);
+      // Fetch counts for each status
+      const [allResult, activeResult, onHoldResult, completedResult] = await Promise.all([
+        projectApi.getAll(undefined, undefined, 1, 1),
+        projectApi.getAll('active', undefined, 1, 1),
+        projectApi.getAll('on hold', undefined, 1, 1),
+        projectApi.getAll('completed', undefined, 1, 1),
+      ]);
+
+      setAllProjectsCount({
+        all: allResult.pagination.totalCount,
+        active: activeResult.pagination.totalCount,
+        'on hold': onHoldResult.pagination.totalCount,
+        completed: completedResult.pagination.totalCount,
+      });
     } catch (err) {
-      console.error('Error fetching all projects:', err);
+      console.error('Error fetching project counts:', err);
     }
   }, []);
 
@@ -74,84 +98,57 @@ export default function Dashboard() {
     };
   }, [searchTerm]);
 
-  // Fetch projects from API with filters
+  // Fetch projects from API with filters, pagination, and sorting
   const fetchProjects = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await projectApi.getAll(selectedStatus !== 'all' ? selectedStatus : undefined, debouncedSearchTerm || undefined);
-      setProjects(data);
-      setFilteredProjects(data);
+      
+      // Map frontend sort field to backend field name
+      const sortByMap: { [key: string]: string } = {
+        name: 'name',
+        status: 'status',
+        deadline: 'deadline',
+        assigned_team_member: 'assigned_team_member',
+        budget: 'budget',
+        created_at: 'created_at',
+      };
+      
+      const backendSortBy = sortField ? sortByMap[sortField as string] || 'created_at' : 'created_at';
+      
+      const result = await projectApi.getAll(
+        selectedStatus !== 'all' ? selectedStatus : undefined,
+        debouncedSearchTerm || undefined,
+        currentPage,
+        itemsPerPage,
+        backendSortBy,
+        sortDirection
+      );
+      
+      setProjects(result.projects);
+      setPagination(result.pagination);
     } catch (err) {
       console.error('Error fetching projects:', err);
       setError('Failed to load projects. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [selectedStatus, debouncedSearchTerm]);
+  }, [selectedStatus, debouncedSearchTerm, currentPage, itemsPerPage, sortField, sortDirection]);
 
-  // Sort projects
-  const sortProjects = useCallback((projects: Project[]): Project[] => {
-    if (!sortField) return projects;
-
-    return [...projects].sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
-
-      // Handle different data types
-      if (sortField === 'deadline') {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      } else if (sortField === 'budget') {
-        aValue = Number(aValue);
-        bValue = Number(bValue);
-      } else if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-
-      // Handle null/undefined values
-      if (aValue == null && bValue == null) return 0;
-      if (aValue == null) return 1;
-      if (bValue == null) return -1;
-
-      // Compare values
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [sortField, sortDirection]);
-
-  // Apply sorting to filtered projects
+  // Reset to first page when filters change
   useEffect(() => {
-    const sorted = sortProjects(projects);
-    setFilteredProjects(sorted);
-    // Reset to first page when filtered/sorted results change
     setCurrentPage(1);
-  }, [projects, sortProjects]);
+  }, [selectedStatus, debouncedSearchTerm, sortField, sortDirection]);
 
-  // Fetch all projects on mount for counts
+  // Fetch project counts on mount
   useEffect(() => {
-    fetchAllProjects();
-  }, [fetchAllProjects]);
+    fetchProjectCounts();
+  }, [fetchProjectCounts]);
 
+  // Fetch projects when dependencies change
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
-
-  // Calculate project counts by status from all projects (for accurate counts)
-  const projectCounts = {
-    all: allProjects.length,
-    active: allProjects.filter((p: Project) => p.status === 'active').length,
-    'on hold': allProjects.filter((p: Project) => p.status === 'on hold').length,
-    completed: allProjects.filter((p: Project) => p.status === 'completed').length,
-  };
-
-  // Calculate paginated projects
-  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
 
   // Reset to first page when items per page changes
   useEffect(() => {
@@ -175,7 +172,7 @@ export default function Dashboard() {
 
     try {
       await projectApi.delete(id);
-      fetchAllProjects(); // Refresh counts
+      fetchProjectCounts(); // Refresh counts
       fetchProjects();
     } catch (err) {
       console.error('Error deleting project:', err);
@@ -192,7 +189,7 @@ export default function Dashboard() {
       }
       setIsModalOpen(false);
       setEditingProject(null);
-      fetchAllProjects(); // Refresh counts
+      fetchProjectCounts(); // Refresh counts
       fetchProjects();
     } catch (err) {
       console.error('Error saving project:', err);
@@ -242,7 +239,7 @@ export default function Dashboard() {
             <StatusFilter
               selectedStatus={selectedStatus}
               onStatusChange={setSelectedStatus}
-              projectCounts={projectCounts}
+              projectCounts={allProjectsCount}
             />
             <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
           </div>
@@ -258,7 +255,7 @@ export default function Dashboard() {
         {/* Projects Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <ProjectTable
-            projects={paginatedProjects}
+            projects={projects}
             onEdit={handleEditProject}
             onDelete={handleDeleteProject}
             isLoading={isLoading}
@@ -269,20 +266,23 @@ export default function Dashboard() {
                 setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
               } else {
                 setSortField(field);
-                setSortDirection('asc');
+                setSortDirection('desc');
               }
             }}
           />
 
           {/* Pagination */}
-          {!isLoading && filteredProjects.length > 0 && (
+          {!isLoading && pagination.totalCount > 0 && (
             <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
               itemsPerPage={itemsPerPage}
-              totalItems={filteredProjects.length}
+              totalItems={pagination.totalCount}
               onPageChange={setCurrentPage}
-              onItemsPerPageChange={setItemsPerPage}
+              onItemsPerPageChange={(newLimit) => {
+                setItemsPerPage(newLimit);
+                setCurrentPage(1);
+              }}
             />
           )}
         </div>

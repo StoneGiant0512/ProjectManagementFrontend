@@ -25,3 +25,19 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+export interface PaginationMeta {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaginatedApiResponse<T> {
+  success: boolean;
+  count: number;
+  data: T;
+  pagination: PaginationMeta;
+}
+
