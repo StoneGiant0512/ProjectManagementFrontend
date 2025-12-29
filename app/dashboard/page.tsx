@@ -21,7 +21,12 @@ export default function Dashboard() {
     hasNextPage: false,
     hasPrevPage: false,
   });
-  const [allProjectsCount, setAllProjectsCount] = useState<{ [key: string]: number }>({
+  const [allProjectsCount, setAllProjectsCount] = useState<{
+    all: number;
+    active: number;
+    'on hold': number;
+    completed: number;
+  }>({
     all: 0,
     active: 0,
     'on hold': 0,
